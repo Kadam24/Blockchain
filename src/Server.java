@@ -7,9 +7,11 @@ import java.util.List;
 
 public class Server {
 
+    private static final int PORT = 9001;
     public static List<Block> chain = new ArrayList<Block>();
     public static List<Tranzaction> transactionsToAdd = new ArrayList<Tranzaction>();
-    private static final Server testBlock = new Server();
+    //private static final Server testBlock = new Server();
+    private static Server testBlock;
     public static int difficulty;
 
     private Server() {
@@ -17,7 +19,14 @@ public class Server {
         difficulty = 4;
     }
 
-    public static Server getBlockchain(){return testBlock;}
+    public static Server getBlockchain(){
+        if(testBlock == null)
+            synchronized(Server.class) {
+                if (testBlock == null)
+                    testBlock = new Server();
+            }
+        return testBlock;
+    }
 
     public static Block getLastBlock() {
         return chain.get(chain.size() - 1);
@@ -66,8 +75,6 @@ public class Server {
         return true;
     }
 
-    private static final int PORT = 9001;
-
 
     public static void main(String[] args) throws Exception {
         System.out.println("The chat server is running.");
@@ -81,7 +88,7 @@ public class Server {
         }
     }
 
-    public Block createGenesisBlock() {
+    public static Block createGenesisBlock() {
         List<Tranzaction> transactions = new ArrayList<Tranzaction>();
         return new Block(0, "A new block", transactions);
     }

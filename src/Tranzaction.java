@@ -1,10 +1,10 @@
 public class Tranzaction {
 
-    public Tranzaction(String sender, String recipient, double amount) {
+    public Tranzaction(String sender, String recipient, String information) {
 
         this.sender = sender;
         this.recipient = recipient;
-        this.amount = amount;
+        this.information = information;
     }
 
     public String getSender() {
@@ -19,14 +19,14 @@ public class Tranzaction {
     public void setRecipient(String recipient) {
         this.recipient = recipient;
     }
-    public double getAmount() {
-        return amount;
+    public String getInformation() {
+        return information;
     }
-    public void setAmount(double amount) {
-        this.amount = amount;
+    public void setInformation(String information) {
+        this.information = information;
     }
 
     private String sender;
     private String recipient;
-    private double amount;
+    private String information;
 }

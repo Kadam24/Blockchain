@@ -18,14 +18,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-
+//our view implementation of transaction
 public class Client {
 
     String kto="";
     String doKogo="";
     String tmp = "";
     String tmp2 = "";
-    int ile = 0;
+    String co = "";
     int ilosc = 0;
     BufferedReader in;
     PrintWriter out;
@@ -56,8 +56,8 @@ public class Client {
                 JOptionPane.PLAIN_MESSAGE);
     }
 
-    private String getHowMuch() {
-        return JOptionPane.showInputDialog(frame, "How much?", "Selection",
+    private String getWhat() {
+        return JOptionPane.showInputDialog(frame, "Co?", "Selection",
                 JOptionPane.PLAIN_MESSAGE);
     }
 
@@ -82,17 +82,21 @@ public class Client {
                     out.println(kto);
                     doKogo = getTo();
                     out.println(doKogo);
+                    co = getWhat();
+                    out.println(co);
 
-                    tmp = getHowMuch();
-                    ile = Integer.parseInt(tmp);
-                    out.println(ile);
+                    Tranzaction model = new Tranzaction(kto, doKogo, co);
+                    TranzactionView view = new TranzactionView();
+                    TranzactionController controller = new TranzactionController(model, view);
+                    controller.updateView();
+
                 }
             }
             else if (line.startsWith("OK")) {
                 System.out.println("Mining 1st block...");
-                Tranzaction t1 = new Tranzaction(kto, doKogo, ile);
+                Tranzaction t1 = new Tranzaction(kto, doKogo, co);
                 testBlock.transactionsToAdd.add(t1);
-                Block newBlock = new Block(testBlock.chain.size(),Integer.toString(ile), testBlock.transactionsToAdd);
+                Block newBlock = new Block(testBlock.chain.size(),co, testBlock.transactionsToAdd);
                 testBlock.addBlock(newBlock);
                 testBlock.chain.remove(0);
                 System.out.println("PoW for first block " + testBlock.proofOfWork());
@@ -105,6 +109,9 @@ public class Client {
         }
     }
 
+    //  public void saveTransactions(String sender, String recipient, String information) {
+    //      System.out.println("Sender : " + sender + " Recipient : " + recipient + " Information: " + information);
+    //  }
     /**
      * Runs the client as an application with a closeable frame.
      */
