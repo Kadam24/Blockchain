@@ -1,8 +1,11 @@
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class Block {
+public class Block implements SubjectBase{
+
+
 
     public int getIndex() {
         return index;
@@ -36,6 +39,16 @@ public class Block {
         this.hash = hash;
     }
 
+    public Boolean getFlag() {
+        return flag;
+    }
+
+    public void setFlag (Boolean flag) {
+        this.flag = flag;
+        if (this.flag == true)
+            notifyMiners();
+    }
+
     public String getData() {
         return data;
     }
@@ -61,24 +74,28 @@ public class Block {
     }
 
     private int index;
+    private Boolean flag;
     private Date timestamp;
     private String prevHash;
     private String hash;
     private String data;
     private long proof;
     private List<Tranzaction> transactions;
+    private List<Miner> miners;
+    private Miner[] tab = new Miner[3];
 
     public Block(int index, String data, List<Tranzaction> transactions) {
         this.index = index;
         this.timestamp = Calendar.getInstance().getTime();
         this.data = data;
 
-        if (Blockchain.chain.size() == 0) {
+        miners = new ArrayList<>();
+        if (Server.chain.size() == 0) {
             this.prevHash = "";
 
         } else {
 
-            String prevHash = Blockchain.getLastBlock().hash;
+            String prevHash = Server.getLastBlock().hash;
             this.prevHash = prevHash;
         }
 
@@ -98,20 +115,43 @@ public class Block {
         }
     }
 
-    public void mineBlock(int difficulty) {
-        String zeroes = new String(new char[difficulty]).replace('\0', '0');
-        String base = "";
-        while (!hash.substring(0, difficulty).equals(zeroes)) {
-            proof++;
-            try {
-                base = calculateBaseForHash();
-                hash = HashAlgorithm.toSha256(base);
-                this.setHash(hash);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+    public void addMiner(Miner miner){
+        miners.add(miner);
+    }
+
+    public void removeMiner(Miner miner){
+        miners.remove(miner);
+    }
+
+    public void notifyMiners(){
+        for (Miner m :tab){
+            m.update();
         }
     }
+
+
+    public void mineBlock(int difficulty) throws InterruptedException {
+
+        int cnt = 3;
+
+        for (int i = 0; i < cnt; i++) {
+            tab[i] = new Miner(this, difficulty);
+            addMiner(tab[i]);
+        }
+
+
+        setFlag(false);
+
+        for(Miner m:tab) {
+            m.start();
+        }
+
+        for(Miner m:tab) {
+            m.join();
+        }
+
+    }
+
 
     public Date getActualDate() {
         return Calendar.getInstance().getTime();

@@ -2,9 +2,69 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server {
 
+    public static List<Block> chain = new ArrayList<Block>();
+    public static List<Tranzaction> transactionsToAdd = new ArrayList<Tranzaction>();
+    private static final Server testBlock = new Server();
+    public static int difficulty;
+
+    private Server() {
+        chain.add(createGenesisBlock());
+        difficulty = 4;
+    }
+
+    public static Server getBlockchain(){return testBlock;}
+
+    public static Block getLastBlock() {
+        return chain.get(chain.size() - 1);
+    }
+
+    public static long proofOfWork() {
+        return getLastBlock().getProof();
+    }
+
+    public static void addBlock(Block b) throws InterruptedException {
+
+        b.setPrevHash(getLastBlock().getHash());
+        b.setIndex(getLastBlock().getIndex() + 1);
+        b.setTimestamp(b.getActualDate());
+        b.setTransactions(b.getTransactions());
+        b.mineBlock(difficulty);
+
+        chain.add(b);
+    }
+
+    public static boolean isChainValid() throws Exception {
+        for (int i = 1; i <= chain.size() - 1; i++) {
+            Block currentBlock = chain.get(i);
+            Block prevBlock = chain.get(i - 1);
+            String base = currentBlock.calculateBaseForHash();
+            try {
+                String h = HashAlgorithm.toSha256(base);
+                if (!currentBlock.getHash().equals(h)) {
+                    System.out.println("Invalid hash");
+                    return false;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (currentBlock.getPrevHash() != prevBlock.getHash()) {
+                System.out.println("Invalid previous hash");
+                return false;
+            }
+
+            if (currentBlock.getIndex() != prevBlock.getIndex() + 1) {
+                System.out.println("Invalid index");
+                return false;
+            }
+        }
+        return true;
+    }
 
     private static final int PORT = 9001;
 
@@ -19,6 +79,11 @@ public class Server {
         } finally {
             listener.close();
         }
+    }
+
+    public Block createGenesisBlock() {
+        List<Tranzaction> transactions = new ArrayList<Tranzaction>();
+        return new Block(0, "A new block", transactions);
     }
 
     private static class Handler extends Thread {
@@ -36,8 +101,6 @@ public class Server {
                 while (true) {
                     out.println("ILE");
                     out.println("DANE");
-     //               out.println("DO KOGO");
-       //             out.println("ILE");
                     out.println("OK");
                 }
             } catch (IOException e) {

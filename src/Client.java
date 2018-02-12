@@ -21,58 +21,19 @@ import javax.swing.JTextField;
 
 public class Client {
 
-    public static List<Block> chain = new ArrayList<Block>();
-    public static List<Tranzaction> transactionsToAdd = new ArrayList<Tranzaction>();
     String kto="";
     String doKogo="";
     String tmp = "";
     String tmp2 = "";
     int ile = 0;
     int ilosc = 0;
-    boolean shouldRefresh = false;
     BufferedReader in;
     PrintWriter out;
     public static JFrame frame = new JFrame("Chatter");
-    JTextField textField = new JTextField(40);
-    JTextArea messageArea = new JTextArea(8, 40);
-    public String sendTo="";
-    private JMenuBar menuBar = new JMenuBar();
- //   private JMenu userMenu = new JMenu("SendTo");
 
 
-    public Client() {
-        // Layout GUI
+    public Client() throws Exception {
 
-      //  textField.setEditable(false);
-      //  messageArea.setEditable(false);
-
-       // frame.getContentPane().add(textField, "North");
-        //frame.getContentPane().add(new JScrollPane(messageArea), "Center");
-       // frame.setJMenuBar(menuBar);
-
-     //   menuBar.add(userMenu);
-
-      //  frame.pack();
-
-        // Add Listeners
-    //    textField.addActionListener(new ActionListener() {
-            //po wcisnieciu enter wysylamy wiadomosc, po wyslaniu ustawiamy pole gdzie mozemy wyslac wiad na pusty
-
-        //    public void actionPerformed(ActionEvent e) {
-          //      if(sendTo.equals(""))
-            //    {
-             //       out.println(textField.getText());
-            //        textField.setText("");
-            //        return;
-          //      }
-                //wysylanie wiadomosci do konkretnego uzytkownika, wypisuje nam co wyslalismy
-          //      messageArea.append("me:"+textField.getText()+"\n");
-                //wysylamy do serwera to co chcemy wyslac uzytkownikowi o danej nazwie
-           //     out.println("SENDTO="+sendTo+"@"+kto+":"+textField.getText());
-                //out.println(textField.getText());
-            //    textField.setText("");
-          //  }
-       // });
     }
 
 
@@ -102,13 +63,12 @@ public class Client {
 
 
     void run() throws Exception {
-
         String serverAddress = getServerAddress();
         Socket socket = new Socket(serverAddress, 9001);
 
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
-        Blockchain testBlock = new Blockchain();
+        Server testBlock = Server.getBlockchain();
         while (true) {
             String line = in.readLine();
             if(line.startsWith("ILE")){
@@ -122,6 +82,7 @@ public class Client {
                     out.println(kto);
                     doKogo = getTo();
                     out.println(doKogo);
+
                     tmp = getHowMuch();
                     ile = Integer.parseInt(tmp);
                     out.println(ile);
@@ -130,8 +91,9 @@ public class Client {
             else if (line.startsWith("OK")) {
                 System.out.println("Mining 1st block...");
                 Tranzaction t1 = new Tranzaction(kto, doKogo, ile);
-                transactionsToAdd.add(t1);
-                Miner.mineNewBlock("mining first block ");
+                testBlock.transactionsToAdd.add(t1);
+                Block newBlock = new Block(testBlock.chain.size(),Integer.toString(ile), testBlock.transactionsToAdd);
+                testBlock.addBlock(newBlock);
                 testBlock.chain.remove(0);
                 System.out.println("PoW for first block " + testBlock.proofOfWork());
                 System.out.println("Hash:" + testBlock.getLastBlock().getHash());
@@ -150,8 +112,8 @@ public class Client {
         //Server.main(null);
 
         Client client = new Client();
-        client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        client.frame.setVisible(true);
+        //client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //client.frame.setVisible(true);
         client.run();
 
     }
